@@ -35,7 +35,15 @@ function requireOption(options, key, command) {
 }
 
 function nowIso() {
-  return new Date().toISOString();
+  const now = new Date();
+  const offsetMinutes = -now.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const abs = Math.abs(offsetMinutes);
+  const hh = String(Math.floor(abs / 60)).padStart(2, "0");
+  const mm = String(abs % 60).padStart(2, "0");
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, -1) + sign + hh + ":" + mm;
 }
 
 function validateCategory(category) {
