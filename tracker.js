@@ -47,10 +47,6 @@ function nowIso() {
 }
 
 function validateCategory(category) {
-  if (!category) {
-    return "";
-  }
-
   const normalized = String(category).trim().toLowerCase();
 
   if (normalized !== "strategic" && normalized !== "tactical") {
@@ -66,7 +62,7 @@ async function sendPayload(webhookUrl, payload) {
     headers: {
       "content-type": "application/json"
     },
-    body: JSON.stringify(payload, null, 2)
+    body: JSON.stringify(payload)
   });
 
   const text = await response.text();
