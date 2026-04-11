@@ -1,50 +1,28 @@
 # Time Tracker Backend
 
-This is a minimal backend for a voice-assisted time tracker.
+Voice-assisted time tracking workflow with a small Node CLI, webhook, and Google Sheets backend.
 
-The idea is:
+The intended flow is simple:
+1. Speak naturally into ChatGPT, Claude, or another assistant
+2. Convert that into a structured time entry
+3. Approve the entry
+4. Send it through a webhook
+5. Store it in Google Sheets
 
-1. You speak naturally into ChatGPT, Claude, or another tool.
-2. The assistant turns that into a structured draft entry.
-3. You approve it.
-4. This backend sends the approved entry to a webhook.
-5. The webhook writes the data to Google Sheets.
+## What this repo contains
+- `tracker.js` - CLI for `start`, `stop`, `log-complete`, and `delete-latest`
+- `mock-webhook.js` - local test server
+- `google-apps-script/Code.gs` - Apps Script endpoint for Google Sheets
+- `index.html` - simple local UI
 
-## Files
-
-- `tracker.js`: CLI that sends approved entries to a webhook
-- `mock-webhook.js`: local test server so you can verify the webhook flow before using Google Sheets
-- `google-apps-script/Code.gs`: Apps Script webhook for Google Sheets
-
-## Spreadsheet Columns
-
-Create a Google Sheet with this first row:
-
-`Activity | Category | Reason | Date | Start Time | End Time | Duration Hours | Status | Notes | Entry ID`
-
-The Apps Script expects that header order.
-
-## Local Test
-
-If you want to save your webhook URL once:
+## Quick start
 
 ```bash
 cp .env.example .env
-```
-
-Then put your URL in `.env` like:
-
-```bash
-WEBHOOK_URL=https://your-web-app-url
-```
-
-Start the mock webhook:
-
-```bash
 npm run mock:webhook
 ```
 
-In another terminal, send a start entry:
+Then in another terminal:
 
 ```bash
 node --env-file=.env tracker.js start \
@@ -53,7 +31,7 @@ node --env-file=.env tracker.js start \
   --reason "Improves health, energy, and long-term performance"
 ```
 
-Stop the open entry:
+Stop the latest open entry:
 
 ```bash
 node --env-file=.env tracker.js stop \
@@ -71,30 +49,20 @@ node --env-file=.env tracker.js log-complete \
   --reason "Important relationship and coordination with meaningful leverage"
 ```
 
-If you do not want to use `.env`, omit `--env-file=.env` and add `--webhook http://localhost:8787` to each command.
+## Google Sheets setup
+1. Create a sheet named `Entries`
+2. Use this header row:
 
-Delete the latest entry:
+`Activity | Category | Reason | Date | Start Time | End Time | Duration Hours | Status | Notes | Entry ID`
 
-```bash
-node --env-file=.env tracker.js delete-latest
-```
+3. Open `Extensions -> Apps Script`
+4. Paste in `google-apps-script/Code.gs`
+5. Deploy as a web app
+6. Put the web app URL in `.env` as `WEBHOOK_URL`
 
-## Google Sheets Setup
+## Payload shape
 
-1. Open a new Google Sheet.
-2. Rename the first sheet to `Entries`.
-3. Add the header row shown above.
-4. Open `Extensions -> Apps Script`.
-5. Paste in `google-apps-script/Code.gs`.
-6. Deploy it as a web app:
-   - Execute as: `Me`
-   - Who has access: `Anyone with the link`
-7. Copy the web app URL.
-8. Use that URL as `--webhook` in `tracker.js`.
-
-## Payload Shape
-
-The CLI sends JSON like this:
+Example `start` payload:
 
 ```json
 {
@@ -109,32 +77,5 @@ The CLI sends JSON like this:
 }
 ```
 
-For `stop`, the payload is:
-
-```json
-{
-  "action": "stop",
-  "entry": {
-    "endTime": "2026-03-25T19:00:00-07:00"
-  }
-}
-```
-
-For `log-complete`, the payload includes both `startTime` and `endTime`.
-
-For `delete-latest`, the payload is:
-
-```json
-{
-  "action": "delete_latest",
-  "entry": {}
-}
-```
-
-## Notes
-
-- The webhook assumes only one open activity at a time.
-- `stop` closes the most recent row whose status is `Open`.
-- Duration is stored in whole minutes.
-- If you omit `--start` on `start`, the CLI uses the current local time.
-- If you omit `--end` on `stop`, the CLI uses the current local time.
+## Status
+Personal productivity tool. Active prototype.
